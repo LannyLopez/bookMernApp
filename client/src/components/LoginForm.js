@@ -1,9 +1,10 @@
-// see SignupForm.js for comments
+
 import React, { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 
-import { useMutation } from ApolloClient
-import{ LOGIN_USER } from '../utils/mutations.js'
+// import { loginUser } from '../utils/API';
+import { useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../utils/mutations.js';
 import Auth from '../utils/auth';
 
 const LoginForm = () => {
@@ -11,15 +12,16 @@ const LoginForm = () => {
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
 
-  const [loginUser, [ error ]] = useMutation(LOGIN_USER);
-
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
   };
 
+  const [loginUser, { error }] = useMutation(LOGIN_USER);
+
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+    debugger;
 
     // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
@@ -27,29 +29,28 @@ const LoginForm = () => {
       event.preventDefault();
       event.stopPropagation();
     }
-
+    console.log(userFormData);
     try {
-     const { token, user } = await loginUser({
-       variables: { ...userFormData }
-     });
-
-      if (!response.ok) {
+      const { data } = await loginUser({
+        variables: { ...userFormData }
+      });
+      console.log(data);
+      console.log(data.login.token);
+      
+            Auth.login(data.login.token);
+      if (error) {
         throw new Error('something went wrong!');
       }
-
-      const { token, user } = await response.json();
-      console.log(user);
-      Auth.login(token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
     }
-
-    setUserFormData({
-      username: '',
-      email: '',
-      password: '',
-    });
+    
+    // setUserFormData({
+    //   username: '',
+    //   email: '',
+    //   password: '',
+    // });
   };
 
   return (
