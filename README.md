@@ -1,4 +1,4 @@
-# bookMernApp# MERN Book search engine
+#MERN Book search engine
 
 This project was to build an app using the full MERN stack this by far was the hardest project we have done in this class and It feels amazing to be able to complete such a hard task things you're able to do with this  is also the last assignment I was able to finished while still being able to graduate it is sort of my last dance which was amazing
 
