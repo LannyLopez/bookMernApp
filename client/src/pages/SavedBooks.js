@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client';
-import React, { useState } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { Jumbotron, Container, CardColumns, Card, Button } from 'react-bootstrap';
 
 import { QUERY_ME } from '../utils/queries';
@@ -7,31 +8,29 @@ import { REMOVE_BOOK } from '../utils/mutations';
 import Auth from '../utils/auth';
 
 const SavedBooks = () => {
+  console.log('parent rerendered');
   const [userData, setUserData] = useState({});
-
-  // use this to determine if `useEffect()` hook needs to run again
-  // const userDataLength = Object.keys(userData).length;
   const [removeBook, { error }] = useMutation(REMOVE_BOOK);
-  const {loading, data} = useQuery(QUERY_ME);
-  console.log(data);
-  const user = data?.me || {};
-  console.log(user);
- 
-  if (!user?.username) {
-    return (
-      <h4>
-        You need to be logged in to see this. Use the navigation links above to
-        sign up or log in!
-      </h4>
-    );
-  }
 
-   // if data isn't here yet, say so
-   if (loading) {
-    return <h2>LOADING...</h2>;
-  }
+    const userDataLength = Object.keys(userData).length;
 
-  setUserData(user);
+        const { loading, data } = useQuery(QUERY_ME);
+        let queriedData;
+useEffect(() => {
+  const getUserData = async () => {
+      if(data) {
+        console.log('querymedata:', data);
+      const user = data?.me || {};
+      setUserData(user);
+      queriedData = user;
+      }
+  };
+    getUserData();
+  }, [queriedData, userDataLength, data, userData]);
+
+
+  
+
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -42,16 +41,21 @@ const SavedBooks = () => {
     }
 
     try {
-      const {data} = await removeBook({
+      const {data} =  await removeBook({
         variables: { bookId: bookId }
       });
 
       if (error) {
         throw new Error('something went wrong!');
       }
-
-      const updatedUser = data.user
-      setUserData(updatedUser);
+      if(data) {
+        console.log('removedata: ', data);
+          const updatedUser = data?.removeBook || {};
+          setUserData(updatedUser);
+      } else {
+        console.log('loading. state not changed');
+      }
+      
       // upon success, remove book's id from localStorage
       
     } catch (err) {
@@ -59,9 +63,12 @@ const SavedBooks = () => {
     }
   };
 
- 
-
-  return (
+  // if data isn't here yet, return loading div
+  if (loading) {
+    return <h2>LOADING...</h2>;
+  } else { 
+     queriedData = data.me;
+    return (
     <>
       <Jumbotron fluid className='text-light bg-dark'>
         <Container>
@@ -70,12 +77,13 @@ const SavedBooks = () => {
       </Jumbotron>
       <Container>
         <h2>
-          {userData.savedBooks.length
-            ? `Viewing ${userData.savedBooks.length} saved ${userData.savedBooks.length === 1 ? 'book' : 'books'}:`
+          {queriedData.savedBooks.length
+            ? `Viewing ${queriedData.savedBooks.length} saved ${queriedData.savedBooks.length === 1 ? 'book' : 'books'}:`
             : 'You have no saved books!'}
         </h2>
+        {queriedData.savedBooks.length && (
         <CardColumns>
-          {userData.savedBooks.map((book) => {
+          {queriedData.savedBooks.map((book) => {
             return (
               <Card key={book.bookId} border='dark'>
                 {book.image ? <Card.Img src={book.image} alt={`The cover for ${book.title}`} variant='top' /> : null}
@@ -91,9 +99,10 @@ const SavedBooks = () => {
             );
           })}
         </CardColumns>
+        )}
       </Container>
     </>
-  );
-};
-
+  )
+ }
+}
 export default SavedBooks;
