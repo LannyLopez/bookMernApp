@@ -15,7 +15,7 @@ type User {
     savedBooks: [books]
 }
 type Auth {
-    token: ID,
+    token: ID!
     user: User
 }
 type Query {
@@ -24,8 +24,8 @@ type Query {
 type Mutation {
     login(email: String!, password: String!): Auth
     addUser(username: String!, password: String!): Auth
-    saveBook(savedBooks: Array!,description: String!, bookId, INT!): User
-    removeBook(bookId: INT!) User
+    saveBook(authors: [String!], title: String!, description: String!, bookId: String!, image: String!, link: String!): User
+    removeBook(bookId: String!): User
 }
 
 
